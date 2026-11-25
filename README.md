@@ -198,7 +198,7 @@ Copy `.env.example` to `.env`. Spring Boot loads that file for this project; she
 | `MAX_DOCUMENTS` | `70` | No | Overall library limit. The application also enforces up to 50 PDFs and 20 screenshots. |
 | `AI_ENABLED` | `false` | No | Set to `true` to enable Spring AI/Gemini endpoints and Gemini vision extraction. |
 | `GEMINI_API_KEY` | empty | Only if AI enabled | Private Google Gemini API key. Do not commit `.env` or paste the key into public issues. |
-| `GEMINI_MODEL` | `gemini-3.6-flash` | No | Gemini model name used for chat and vision requests. |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | No | Gemini model name used for chat and vision requests. |
 
 Minimal local configuration:
 
@@ -209,7 +209,7 @@ UPLOAD_DIR=./data/uploads
 MAX_DOCUMENTS=70
 AI_ENABLED=false
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-3.6-flash
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 To enable Gemini, set `AI_ENABLED=true`, provide your key in `GEMINI_API_KEY`, save `.env`, and restart the application. No API key is required for the core library. Local Tesseract OCR is separate and does not require a Gemini key.
@@ -221,7 +221,7 @@ To enable Gemini, set `AI_ENABLED=true`, provide your key in `GEMINI_API_KEY`, s
 - **Screenshots:** Gemini vision is used when enabled. Otherwise the app attempts local Tesseract.
 - **Tesseract:** install Tesseract and English language data, then make sure `tesseract --version` works in the same environment that runs Java. No executable path setting is required.
 - **No OCR available:** the original image/PDF remains viewable; extracted text may be empty and will not be searchable.
-- **AI comparison:** select 2–4 resumes, review the source material, enter criteria, then choose **Ask AI to compare evidence**. The server sends up to 12,000 characters of extracted text per selected resume to Gemini.
+- **AI comparison:** select 2–4 resumes, review the source material, enter criteria, then choose **Ask AI to compare evidence**. The server sends up to 6,000 characters per selected resume and requests a concise report with a compact project comparison plus a separate, evidence-based suggestions section for every candidate. Gemini uses minimal thinking and a bounded response size to reduce wait time.
 
 OCR can misread names, dates, numbers, and columns. Gemini can also produce inaccurate comparisons. Always check the original source before relying on extracted text or AI output.
 

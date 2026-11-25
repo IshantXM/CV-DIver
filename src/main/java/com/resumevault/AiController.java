@@ -1,6 +1,8 @@
 package com.resumevault;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.google.genai.common.GoogleGenAiThinkingLevel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import java.util.*;
 @RequestMapping("/api/ai")
 @ConditionalOnProperty(name="app.ai-enabled", havingValue="true")
 class AiController {
+  private static final int MAX_TEXT_CHARS_PER_RESUME=6000;
   private static final Logger log=LoggerFactory.getLogger(AiController.class);
   private final ChatClient chat;
   AiController(ChatClient chat){this.chat=chat;}
@@ -25,13 +28,13 @@ class AiController {
       if(!(candidate instanceof Map<?,?> resume)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Each resume must include a name and extracted text.");
       String text=Objects.toString(resume.get("text"),"");
       String name=Objects.toString(resume.get("name"),"Resume");
-      return name+"\n"+text.substring(0,Math.min(12000,text.length()));
+      return name+"\n"+text.substring(0,Math.min(MAX_TEXT_CHARS_PER_RESUME,text.length()));
     }).reduce((a,b)->a+"\n\n---\n\n"+b).orElse("");
     if(candidates.stream().noneMatch(candidate->candidate instanceof Map<?,?> resume&&!Objects.toString(resume.get("text"),"").isBlank()))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No resume text was extracted. Check the original files or configure OCR before asking Gemini to compare.");
     String criteria=Objects.toString(body.get("criteria"),"Compare projects by problem, contribution, architecture, technologies, scope, outcomes, and relevance. Explain differences and cite resume evidence.");
     try {
-      String result=chat.prompt().system("You are a careful resume and project comparison assistant. Compare only role-related evidence. Identify named projects and compare their stated problem, candidate contribution, architecture, technologies, scope, and outcomes. Explain which projects best match the user's criteria, and why; do not invent a universal 'better' project. Do not infer or evaluate protected traits such as age, race, gender, disability, religion, or family status. Turn the user's criteria into a concise rubric with explicit weights summing to 100. Score candidates against the same rubric. For every score, quote short exact evidence from that candidate's resume. Mark missing details as unknown. Never recommend a hiring decision. Return: Normalized rubric, Project comparison matrix (candidate, project, criterion, score, exact evidence), Key differences, Gaps to verify, Follow-up questions.")
+      String result=chat.prompt().options(GoogleGenAiChatOptions.builder().maxOutputTokens(1800).temperature(0.1).thinkingLevel(GoogleGenAiThinkingLevel.MINIMAL).build()).system("You are a concise, evidence-grounded resume project reviewer. Compare only the two to four supplied resumes against the user's criteria. From each resume, choose at most the three most relevant named projects. Return these Markdown sections in order: ## Quick read (two sentences); ## Project comparison (one compact table with candidate, project, best-fit evidence, and limitation; quote only short exact phrases); ## Key differences (at most three bullets); ## Suggestions for [each candidate's name] (exactly three practical resume or project-presentation improvements per person, each tied to their own evidence; recommend adding metrics only when the person can verify them); ## Gaps to verify (at most three bullets). Keep the whole answer under 700 words. Do not generate a separate score for every project criterion, repeat the resumes, invent evidence, evaluate protected traits, or recommend a hiring decision. If a name is unclear, use the supplied resume filename. Mark missing facts as unknown.")
         .user("Evaluation request:\n"+criteria+"\n\nCandidate resumes:\n"+resumes).call().content();
       if(result==null||result.isBlank()) throw new IllegalStateException("Gemini returned an empty response.");
       return Map.of("comparison",result);

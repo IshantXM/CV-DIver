@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.resumevault</groupId><artifactId>resume-vault</artifactId><version>0.1.0</version>
   <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>3.5.7</version><relativePath/></parent>
-  <properties><java.version>21</java.version><spring-ai.version>1.1.0</spring-ai.version></properties>
+  <properties><java.version>21</java.version><spring-ai.version>1.1.8</spring-ai.version></properties>
   <dependencyManagement><dependencies><dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-bom</artifactId><version>${spring-ai.version}</version><type>pom</type><scope>import</scope></dependency></dependencies></dependencyManagement>
   <dependencies>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
