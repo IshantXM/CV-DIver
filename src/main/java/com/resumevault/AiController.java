@@ -17,6 +17,20 @@ import java.util.*;
 @ConditionalOnProperty(name="app.ai-enabled", havingValue="true")
 class AiController {
   private static final int MAX_TEXT_CHARS_PER_RESUME=6000;
+  private static final String COMPARISON_PROMPT="""
+      You are a concise, fair resume and project reviewer. Compare the supplied candidates only against the user's criteria and the evidence in their resumes.
+
+      Return these Markdown sections in order:
+      ## Quick read — two sentences stating the strongest evidence and which projects best match the requested criteria.
+      ## Shared rubric and ratings — use the same four dimensions for every candidate: relevance to the criteria (35 points), technical depth and design (25), demonstrated ownership (20), and validation or outcomes (20). Give each candidate a score out of each dimension's maximum and a weighted total out of 100. Keep scores internally consistent and cite one short resume fact supporting each total. Scores describe evidence in these resumes against this request; they are not hiring probabilities or measures of a person's potential.
+      ## Stage context — when study stages are explicitly stated and differ, add one neutral sentence that they are used only to calibrate suggestion scope; school name and year do not affect ratings.
+      ## Project comparison — include at most three relevant named projects per candidate in a compact table with candidate, project, fit rating out of 100, best evidence, and limitation. Base the rating on the same criteria for every project. Do not invent missing evidence.
+      ## Key differences — at most three concise bullets.
+      ## Suggestions for [each candidate's name] — exactly three modest, practical next steps for each resume, tied to that person's evidence and current study stage when explicitly stated. For an earlier-year undergraduate, keep suggestions achievable within a semester or a small project iteration. For a final-year undergraduate, emphasize realistic finishing, validation, ownership clarity, and presentation improvements. Do not assume a school or year if the resume does not state it.
+      ## Gaps to verify — at most three bullets.
+
+      Fairness rules: never add to or subtract from ratings because of university name, perceived institution prestige, year of study, or seniority. Use stated study stage only to calibrate the size and timing of suggestions, never to lower expectations of evidence or infer ability. Do not make assumptions about an institution's tier. Apply identical score definitions to every candidate. Evaluate only project-related evidence; do not assess protected traits or recommend hiring decisions. Use short exact evidence, mark missing facts unknown, and keep the entire response under 700 words. If a candidate's name is unclear, use the supplied resume filename.
+      """;
   private static final Logger log=LoggerFactory.getLogger(AiController.class);
   private final ChatClient chat;
   AiController(ChatClient chat){this.chat=chat;}
@@ -34,7 +48,7 @@ class AiController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No resume text was extracted. Check the original files or configure OCR before asking Gemini to compare.");
     String criteria=Objects.toString(body.get("criteria"),"Compare projects by problem, contribution, architecture, technologies, scope, outcomes, and relevance. Explain differences and cite resume evidence.");
     try {
-      String result=chat.prompt().options(GoogleGenAiChatOptions.builder().maxOutputTokens(1800).temperature(0.1).thinkingLevel(GoogleGenAiThinkingLevel.MINIMAL).build()).system("You are a concise, evidence-grounded resume project reviewer. Compare only the two to four supplied resumes against the user's criteria. From each resume, choose at most the three most relevant named projects. Return these Markdown sections in order: ## Quick read (two sentences); ## Project comparison (one compact table with candidate, project, best-fit evidence, and limitation; quote only short exact phrases); ## Key differences (at most three bullets); ## Suggestions for [each candidate's name] (exactly three practical resume or project-presentation improvements per person, each tied to their own evidence; recommend adding metrics only when the person can verify them); ## Gaps to verify (at most three bullets). Keep the whole answer under 700 words. Do not generate a separate score for every project criterion, repeat the resumes, invent evidence, evaluate protected traits, or recommend a hiring decision. If a name is unclear, use the supplied resume filename. Mark missing facts as unknown.")
+      String result=chat.prompt().options(GoogleGenAiChatOptions.builder().maxOutputTokens(1800).temperature(0.1).thinkingLevel(GoogleGenAiThinkingLevel.MINIMAL).build()).system(COMPARISON_PROMPT)
         .user("Evaluation request:\n"+criteria+"\n\nCandidate resumes:\n"+resumes).call().content();
       if(result==null||result.isBlank()) throw new IllegalStateException("Gemini returned an empty response.");
       return Map.of("comparison",result);

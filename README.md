@@ -221,7 +221,7 @@ To enable Gemini, set `AI_ENABLED=true`, provide your key in `GEMINI_API_KEY`, s
 - **Screenshots:** Gemini vision is used when enabled. Otherwise the app attempts local Tesseract.
 - **Tesseract:** install Tesseract and English language data, then make sure `tesseract --version` works in the same environment that runs Java. No executable path setting is required.
 - **No OCR available:** the original image/PDF remains viewable; extracted text may be empty and will not be searchable.
-- **AI comparison:** select 2–4 resumes, review the source material, enter criteria, then choose **Ask AI to compare evidence**. The server sends up to 6,000 characters per selected resume and requests a concise report with a compact project comparison plus a separate, evidence-based suggestions section for every candidate. Gemini uses minimal thinking and a bounded response size to reduce wait time.
+- **AI comparison:** select 2–4 resumes, review the source material, enter criteria, then choose **Ask AI to compare evidence**. The server sends up to 6,000 characters per selected resume and requests a concise report with a shared weighted rubric, candidate and project ratings, evidence-based differences, and a separate suggestions section for every candidate. Suggestions can reflect a stated study stage; school name and year never change ratings. Gemini uses minimal thinking and a bounded response size to reduce wait time.
 
 OCR can misread names, dates, numbers, and columns. Gemini can also produce inaccurate comparisons. Always check the original source before relying on extracted text or AI output.
 
