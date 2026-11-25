@@ -4,10 +4,10 @@ A private, single-workspace resume library built with Java, Spring Boot, and Spr
 
 ## Run locally
 
-Requirements: Java 21 or newer and Maven 3.6.3 or newer. From this folder:
+Requirements: Java 21 or newer. The Maven Wrapper downloads Maven on its first run. From this folder:
 
 ```powershell
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
 Then open [http://localhost:8080](http://localhost:8080). By default, the library uses a local H2 database at `./data/resumevault` and saves uploaded files under `./data/uploads`.
