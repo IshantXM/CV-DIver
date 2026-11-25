@@ -1,6 +1,9 @@
 package com.resumevault;
 
 import org.apache.tika.Tika;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.ai.chat.client.ChatClient;
@@ -12,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
+import javax.imageio.ImageIO;
 import java.util.concurrent.TimeUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -70,7 +74,11 @@ public class ResumeController {
 
   private String extract(Path file, String name) {
     try {
-      if(name.endsWith(".pdf")) return new Tika().parseToString(file);
+      if(name.endsWith(".pdf")) {
+        String text=new Tika().parseToString(file);
+        if(!text.isBlank()) return text;
+        return extractScannedPdf(file);
+      }
       if(vision!=null) {
         try {
           var mime=name.endsWith(".png")?MimeTypeUtils.IMAGE_PNG:MimeTypeUtils.IMAGE_JPEG;
@@ -80,6 +88,33 @@ public class ResumeController {
       }
       return ocrWithTesseract(file);
     } catch(Exception e) { return ""; }
+  }
+
+  private String extractScannedPdf(Path file) throws Exception {
+    Path temporaryDirectory=Files.createTempDirectory("cvdiver-pdf-ocr-");
+    try {
+      List<Path> pages=new ArrayList<>();
+      try(PDDocument document=Loader.loadPDF(file.toFile())) {
+        PDFRenderer renderer=new PDFRenderer(document);
+        int pageCount=Math.min(document.getNumberOfPages(),6);
+        for(int i=0;i<pageCount;i++) {
+          Path page=temporaryDirectory.resolve("page-"+(i+1)+".png");
+          ImageIO.write(renderer.renderImageWithDPI(i,120),"png",page.toFile());
+          pages.add(page);
+        }
+      }
+      if(vision!=null) {
+        return vision.prompt().user(user->{
+          user.text("These are consecutive pages from a scanned resume PDF. Transcribe the visible resume text in page order. Preserve section headings, project names, responsibilities, technologies, dates, and outcomes. Do not add details that are not visible.");
+          for(Path page:pages) user.media(MimeTypeUtils.IMAGE_PNG,new FileSystemResource(page));
+        }).call().content();
+      }
+      return pages.stream().map(this::tryLocalOcr).filter(s->!s.isBlank()).reduce((a,b)->a+"\n\n"+b).orElse("");
+    } finally { deleteTree(temporaryDirectory); }
+  }
+
+  private String tryLocalOcr(Path image) {
+    try { return ocrWithTesseract(image); } catch(Exception ignored) { return ""; }
   }
 
   private String ocrWithTesseract(Path file) throws Exception {
@@ -92,11 +127,13 @@ public class ResumeController {
       if(process.exitValue()!=0) return "";
       Path textFile=temporaryDirectory.resolve("recognized.txt");
       return Files.exists(textFile)?Files.readString(textFile,StandardCharsets.UTF_8):"";
-    } finally {
-      try(var paths=Files.walk(temporaryDirectory)) {
-        paths.sorted(Comparator.reverseOrder()).forEach(path->{try{Files.deleteIfExists(path);}catch(Exception ignored){}});
-      }
-    }
+    } finally { deleteTree(temporaryDirectory); }
+  }
+
+  private void deleteTree(Path directory) {
+    try(var paths=Files.walk(directory)) {
+      paths.sorted(Comparator.reverseOrder()).forEach(path->{try{Files.deleteIfExists(path);}catch(Exception ignored){}});
+    } catch(Exception ignored) { }
   }
 
   @GetMapping("/{id}") public ResponseEntity<?> get(@PathVariable String id) {

@@ -4,7 +4,7 @@ A private, single-workspace resume library built with Java, Spring Boot, Spring 
 
 ## Run locally on Windows
 
-You need **Java 21 or newer** and a running MongoDB server. The project includes Maven Wrapper scripts, so you do not need to install Maven. The wrapper downloads Maven the first time it runs; that first run needs an internet connection.
+You need **Java 21 or newer** and a running MongoDB server. Maven 3.9.11 is now installed in this Windows user profile, so `mvn spring-boot:run` works from a new terminal in VS Code, Antigravity, or PowerShell. Restart any IDE that was already open so it can see the updated PATH. The project also includes Maven Wrapper scripts for other machines.
 
 1. Start MongoDB. For a local server, the default connection is `mongodb://localhost:27017/CV-DIVER`.
 2. Open PowerShell in the project folder (the folder containing `mvnw.cmd`).
@@ -21,12 +21,18 @@ You need **Java 21 or newer** and a running MongoDB server. The project includes
 5. Start the app from that same PowerShell window:
 
    ```powershell
-   .\mvnw.cmd spring-boot:run
+   mvn spring-boot:run
    ```
 
 6. Wait for `Started ResumeVaultApplication` in the output, then open [http://localhost:8080](http://localhost:8080). Keep the PowerShell window open while using the app; press Ctrl+C there to stop it.
 
-Use `.\mvnw.cmd`, **not** `mvn`, when Maven is not installed. If PowerShell says it cannot find `mvnw.cmd`, first change to the project folder with `cd "C:\Users\Ishant Mohan\Documents\ChatGPT\CV DIver"`.
+If Maven is not installed on another machine, use the included wrapper instead:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+There is also a VS Code task named **Run CV Diver**. Open Terminal → Run Task → Run CV Diver. A trailing backslash is not part of the Maven command.
 
 ## Troubleshooting
 
