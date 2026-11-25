@@ -1,4 +1,4 @@
-# Papertrail — Resume library
+# CV Diver — Resume library
 
 A private, single-workspace resume library built with Java, Spring Boot, and Spring AI. Keep up to **50 PDFs and 20 screenshots**, extract text for searching and reading, review originals, track a review stage, and compare up to four candidates side by side.
 
