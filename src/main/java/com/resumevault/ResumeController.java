@@ -47,7 +47,7 @@ public class ResumeController {
     for(MultipartFile file:files) {
       String original=Objects.requireNonNullElse(file.getOriginalFilename(),"resume");
       String lower=original.toLowerCase(Locale.ROOT);
-      if(!(lower.endsWith(".pdf")||lower.endsWith(".png")||lower.endsWith(".jpg")||lower.endsWith(".jpeg")||lower.endsWith(".webp"))) continue;
+      if(!(lower.endsWith(".pdf")||lower.endsWith(".png")||lower.endsWith(".jpg")||lower.endsWith(".jpeg"))) continue;
       String safe=UUID.randomUUID()+"-"+Path.of(original).getFileName(); Path target=storage.resolve(safe).normalize();
       if(!target.startsWith(storage)) continue;
       file.transferTo(target);

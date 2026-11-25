@@ -33,7 +33,7 @@ Copy `.env.example` to `.env` and set only the values you need. Spring Boot does
 
 PDF text extraction works without an OCR engine. To extract text from screenshot images, install Tesseract with English language data and set `TESSERACT_PATH` to the folder containing `eng.traineddata`. Image resumes can still be opened when OCR is unavailable; the extracted-text pane will explain that no text was found.
 
-The AI comparison is opt-in. Set `AI_ENABLED=true` and `OPENAI_API_KEY`. AI output is intended as a grounded reading aid, asks for evidence from the resumes, and does not make a hiring decision. Confirm details in the original files.
+The AI comparison is opt-in. Set `AI_ENABLED=true` and `OPENAI_API_KEY`. When you request an AI comparison, the selected resumes' extracted text is sent to OpenAI. AI output is intended as a grounded reading aid, asks for evidence from the resumes, and does not make a hiring decision. Confirm details in the original files.
 
 ## PostgreSQL
 
@@ -41,7 +41,7 @@ Add a PostgreSQL JDBC URL, for example `DATABASE_URL=jdbc:postgresql://localhost
 
 ## Accessibility and privacy
 
-The interface includes keyboard-accessible controls, visible focus styles, a skip link, semantic table headings, screen-reader labels and live status messages, responsive layouts, and reduced-motion support. It stores documents on the configured server. This starter is designed for a trusted local deployment and does not include user sign-in or role management; add authentication before sharing a deployment with multiple users or exposing it to the internet. The app does not connect to or scrape LinkedIn. Upload files you already have permission to use.
+The interface includes keyboard-accessible controls, visible focus styles, a skip link, semantic table headings, screen-reader labels and live status messages, responsive layouts, and reduced-motion support. It stores documents on the configured server. If you enable AI, selected extracted text is sent to OpenAI for that comparison. This starter is designed for a trusted local deployment and does not include user sign-in or role management; add authentication before sharing a deployment with multiple users or exposing it to the internet. The app does not connect to or scrape LinkedIn. Upload files you already have permission to use.
 
 ## API overview
 

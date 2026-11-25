@@ -1,13 +1,13 @@
 package com.resumevault;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/ai")
-@ConditionalOnBean(ChatClient.class)
+@ConditionalOnProperty(name="app.ai-enabled", havingValue="true")
 class AiController {
   private final ChatClient chat;
   AiController(ChatClient chat){this.chat=chat;}
