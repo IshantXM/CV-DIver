@@ -1,15 +1,12 @@
 server:
   port: ${PORT:8080}
 spring:
+  config.import: optional:file:.env[.properties]
   application.name: resume-vault
   threads.virtual.enabled: true
-  datasource:
-    url: ${DATABASE_URL:jdbc:h2:file:./data/resumevault;AUTO_SERVER=TRUE}
-    username: ${DATABASE_USERNAME:sa}
-    password: ${DATABASE_PASSWORD:}
-  jpa:
-    hibernate.ddl-auto: update
-    open-in-view: false
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/CV-DIVER}
   servlet.multipart:
     max-file-size: 500MB
     max-request-size: 500MB
@@ -17,6 +14,6 @@ app:
   storage-dir: ${UPLOAD_DIR:./data/uploads}
   max-documents: ${MAX_DOCUMENTS:70}
   ai-enabled: ${AI_ENABLED:false}
-  openai-api-key: ${OPENAI_API_KEY:}
-  openai-model: ${OPENAI_MODEL:gpt-4o-mini}
+  gemini-api-key: ${GEMINI_API_KEY:}
+  gemini-model: ${GEMINI_MODEL:gemini-2.5-flash}
   tesseract-path: ${TESSERACT_PATH:}

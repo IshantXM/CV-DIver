@@ -3,7 +3,10 @@ package com.resumevault;
 import net.sourceforge.tess4j.Tesseract;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,13 +22,16 @@ public class ResumeController {
   private final Path storage;
   private final int maxDocuments;
   private final String tessdataPath;
+  private final ChatClient vision;
 
   public ResumeController(ResumeRepository repository,
       @Value("${app.storage-dir}") String storageDir,
       @Value("${app.max-documents:70}") int maxDocuments,
-      @Value("${app.tesseract-path:}") String tessdataPath) throws Exception {
+      @Value("${app.tesseract-path:}") String tessdataPath,
+      ObjectProvider<ChatClient> visionProvider) throws Exception {
     this.repository=repository; this.storage=Paths.get(storageDir).toAbsolutePath().normalize();
     this.maxDocuments=maxDocuments; this.tessdataPath=tessdataPath;
+    this.vision=visionProvider.getIfAvailable();
     Files.createDirectories(this.storage);
   }
 
@@ -66,6 +72,13 @@ public class ResumeController {
   private String extract(Path file, String name) {
     try {
       if(name.endsWith(".pdf")) return new Tika().parseToString(file);
+      if(vision!=null) {
+        try {
+          var mime=name.endsWith(".png")?MimeTypeUtils.IMAGE_PNG:MimeTypeUtils.IMAGE_JPEG;
+          String text=vision.prompt().user(user->user.text("Read this resume screenshot. Transcribe its text faithfully and preserve section headings, job titles, dates, skills, education, and contact details. Do not add details that are not visible.").media(mime,new FileSystemResource(file))).call().content();
+          if(text!=null&&!text.isBlank()) return text;
+        } catch(Exception ignored) { /* Fall back to local OCR when Gemini is unavailable. */ }
+      }
       Tesseract ocr=new Tesseract(); if(!tessdataPath.isBlank()) ocr.setDatapath(tessdataPath);
       return ocr.doOCR(file.toFile());
     } catch(Exception e) { return ""; }

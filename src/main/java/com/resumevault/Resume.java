@@ -1,24 +1,25 @@
 package com.resumevault;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 
-@Entity
+@Document(collection="resumes")
 public class Resume {
-  @Id @GeneratedValue(strategy=GenerationType.UUID) private String id;
+  @Id private String id;
   private String name;
   private String originalName;
   private String contentType;
   private String filePath;
   private long sizeBytes;
   private String source;
-  @Column(unique=true, length=64) private String sha256Hash;
+  private String sha256Hash;
   private String tags;
   private String stage = "Unreviewed";
   private String verdict = "";
-  @Column(length=2000) private String notes = "";
+  private String notes = "";
   private Instant uploadedAt = Instant.now();
-  @Column(columnDefinition="CLOB") private String extractedText;
+  private String extractedText;
 
   public String getId(){return id;} public String getName(){return name;} public void setName(String v){name=v;}
   public String getOriginalName(){return originalName;} public void setOriginalName(String v){originalName=v;}

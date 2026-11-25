@@ -1,54 +1,50 @@
 # CV Diver — Resume library
 
-A private, single-workspace resume library built with Java, Spring Boot, and Spring AI. Keep up to **50 PDFs and 20 screenshots**, extract text for searching and reading, skip duplicate uploads, review originals, track a review stage and verdict, and compare up to four candidates side by side against your own criteria.
+A private, single-workspace resume library built with Java, Spring Boot, Spring AI, and MongoDB. Keep up to **50 PDFs and 20 screenshots**, extract text for searching and reading, skip duplicate uploads, review originals, track a review stage and verdict, and compare up to four candidates side by side against your own criteria.
 
 ## Run locally
 
-Requirements: Java 21 or newer. The Maven Wrapper downloads Maven on its first run. Uploads are limited to 500 MB per batch. From this folder:
+Requirements: Java 21 or newer, and MongoDB running locally or remotely. The Maven Wrapper downloads Maven on its first run. Uploads are limited to 500 MB per batch. From this folder:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Then open [http://localhost:8080](http://localhost:8080). By default, the library uses a local H2 database at `./data/resumevault` and saves uploaded files under `./data/uploads`.
+Then open [http://localhost:8080](http://localhost:8080). By default, the library connects to MongoDB at `mongodb://localhost:27017/CV-DIVER` and saves uploaded files under `./data/uploads`. Set `MONGODB_URI` to your MongoDB connection string.
 
 ## Environment variables
 
-Copy `.env.example` to `.env` and set only the values you need. Spring Boot does not load `.env` automatically; export these variables in your terminal, or use a tool such as `dotenv` to load the file.
+Copy `.env.example` to `.env` and set only the values you need. The app imports `.env` on startup. Environment variables set by your shell override values in the file.
 
 | Variable | Default | Purpose |
 |---|---|---|
 | `PORT` | `8080` | HTTP port |
-| `DATABASE_URL` | `jdbc:h2:file:./data/resumevault;AUTO_SERVER=TRUE` | JDBC URL; PostgreSQL is supported with a `jdbc:postgresql:` URL |
-| `DATABASE_USERNAME` | `sa` | Database username |
-| `DATABASE_PASSWORD` | empty | Database password |
+| `MONGODB_URI` | `mongodb://localhost:27017/CV-DIVER` | MongoDB connection string, including database name |
 | `UPLOAD_DIR` | `./data/uploads` | Directory for original PDFs and images |
 | `MAX_DOCUMENTS` | `70` | Overall document limit (the application also enforces 50 PDFs and 20 screenshots) |
 | `TESSERACT_PATH` | empty | Path to the Tesseract `tessdata` directory, for example `C:\Program Files\Tesseract-OCR\tessdata` |
-| `AI_ENABLED` | `false` | Set `true` to enable the optional Spring AI comparison summary |
-| `OPENAI_API_KEY` | empty | API key used by Spring AI when AI is enabled |
-| `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI chat model name |
+| `AI_ENABLED` | `false` | Set `true` to enable Gemini comparisons and screenshot vision extraction |
+| `GEMINI_API_KEY` | empty | Gemini Developer API key used by Spring AI |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini chat and vision model name |
 
 ### Optional OCR and AI
 
-PDF text extraction works without an OCR engine. To extract text from screenshot images, install Tesseract with English language data and set `TESSERACT_PATH` to the folder containing `eng.traineddata`. Image resumes can still be opened when OCR is unavailable; the extracted-text pane will explain that no text was found.
+PDF text extraction works without an OCR engine. With `AI_ENABLED=true` and `GEMINI_API_KEY` configured, screenshots are sent to Gemini for vision-based transcription. If Gemini is disabled, install Tesseract with English language data and set `TESSERACT_PATH` to the folder containing `eng.traineddata`. Image resumes can still be opened when OCR is unavailable; the extracted-text pane will explain that no text was found.
 
-The AI comparison is opt-in. Set `AI_ENABLED=true` and `OPENAI_API_KEY`. When you request an AI comparison, the selected resumes' extracted text is sent to OpenAI. AI output is intended as a grounded reading aid, asks for evidence from the resumes, and does not make a hiring decision. Confirm details in the original files.
+AI is opt-in. Set `AI_ENABLED=true` and `GEMINI_API_KEY`. When you request an AI comparison or use vision extraction, selected resume text or screenshot content is sent to Gemini. AI output is intended as a grounded reading aid, asks for evidence from the resumes, and does not make a hiring decision. Confirm details in the original files.
 
-## PostgreSQL
-
-Add a PostgreSQL JDBC URL, for example `DATABASE_URL=jdbc:postgresql://localhost:5432/resumevault`, plus `DATABASE_USERNAME` and `DATABASE_PASSWORD`. The PostgreSQL driver is included. Use a persistent, backed-up volume for both the database and `UPLOAD_DIR` when deploying.
+MongoDB stores resume metadata and extracted text. Use a persistent, backed-up volume for `UPLOAD_DIR` when deploying.
 
 ## Accessibility and privacy
 
-The interface includes keyboard-accessible controls, visible focus styles, a skip link, semantic table headings, screen-reader labels and live status messages, responsive layouts, reduced-motion support, and J/K or arrow-key resume navigation. Press 1, 2, or 3 in the resume viewer to record a Priority, Shortlist, or Reject verdict. It stores documents on the configured server. If you enable AI, selected extracted text and your comparison criteria are sent to OpenAI for that comparison. This starter is designed for a trusted local deployment and does not include user sign-in or role management; add authentication before sharing a deployment with multiple users or exposing it to the internet. The app does not connect to or scrape LinkedIn. Upload files you already have permission to use.
+The interface includes keyboard-accessible controls, visible focus styles, a skip link, semantic table headings, screen-reader labels and live status messages, responsive layouts, reduced-motion support, and J/K or arrow-key resume navigation. Press 1, 2, or 3 in the resume viewer to record a Priority, Shortlist, or Reject verdict. It stores documents on the configured server. If you enable AI, selected extracted text, comparison criteria, or screenshot content are sent to Gemini for processing. This starter is designed for a trusted local deployment and does not include user sign-in or role management; add authentication before sharing a deployment with multiple users or exposing it to the internet. The app does not connect to or scrape LinkedIn. Upload files you have permission to use.
 
 ## API overview
 
 - `GET /api/resumes?q=...` — list and search
 - `POST /api/resumes` — upload multiple PDF/image files (`files` multipart field)
 - `GET /api/resumes/{id}` and `/file` — read metadata/text and original file
-- `PATCH /api/resumes/{id}` — update `stage` or comma-separated `tags`
+- `PATCH /api/resumes/{id}` — update `stage`, `verdict`, `notes`, or comma-separated `tags`
 - `DELETE /api/resumes/{id}` — remove a resume and its stored file
 - `POST /api/resumes/compare` — load 2–4 selected resumes
 - `POST /api/ai/compare` — optional AI summary when configured
