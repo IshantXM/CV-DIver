@@ -2,6 +2,7 @@ server:
   port: ${PORT:8080}
 spring:
   application.name: resume-vault
+  threads.virtual.enabled: true
   datasource:
     url: ${DATABASE_URL:jdbc:h2:file:./data/resumevault;AUTO_SERVER=TRUE}
     username: ${DATABASE_USERNAME:sa}
@@ -10,8 +11,8 @@ spring:
     hibernate.ddl-auto: update
     open-in-view: false
   servlet.multipart:
-    max-file-size: 20MB
-    max-request-size: 100MB
+    max-file-size: 500MB
+    max-request-size: 500MB
 app:
   storage-dir: ${UPLOAD_DIR:./data/uploads}
   max-documents: ${MAX_DOCUMENTS:70}

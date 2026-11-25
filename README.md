@@ -1,10 +1,10 @@
 # CV Diver — Resume library
 
-A private, single-workspace resume library built with Java, Spring Boot, and Spring AI. Keep up to **50 PDFs and 20 screenshots**, extract text for searching and reading, review originals, track a review stage, and compare up to four candidates side by side.
+A private, single-workspace resume library built with Java, Spring Boot, and Spring AI. Keep up to **50 PDFs and 20 screenshots**, extract text for searching and reading, skip duplicate uploads, review originals, track a review stage and verdict, and compare up to four candidates side by side against your own criteria.
 
 ## Run locally
 
-Requirements: Java 21 or newer. The Maven Wrapper downloads Maven on its first run. From this folder:
+Requirements: Java 21 or newer. The Maven Wrapper downloads Maven on its first run. Uploads are limited to 500 MB per batch. From this folder:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -41,7 +41,7 @@ Add a PostgreSQL JDBC URL, for example `DATABASE_URL=jdbc:postgresql://localhost
 
 ## Accessibility and privacy
 
-The interface includes keyboard-accessible controls, visible focus styles, a skip link, semantic table headings, screen-reader labels and live status messages, responsive layouts, and reduced-motion support. It stores documents on the configured server. If you enable AI, selected extracted text is sent to OpenAI for that comparison. This starter is designed for a trusted local deployment and does not include user sign-in or role management; add authentication before sharing a deployment with multiple users or exposing it to the internet. The app does not connect to or scrape LinkedIn. Upload files you already have permission to use.
+The interface includes keyboard-accessible controls, visible focus styles, a skip link, semantic table headings, screen-reader labels and live status messages, responsive layouts, reduced-motion support, and J/K or arrow-key resume navigation. Press 1, 2, or 3 in the resume viewer to record a Priority, Shortlist, or Reject verdict. It stores documents on the configured server. If you enable AI, selected extracted text and your comparison criteria are sent to OpenAI for that comparison. This starter is designed for a trusted local deployment and does not include user sign-in or role management; add authentication before sharing a deployment with multiple users or exposing it to the internet. The app does not connect to or scrape LinkedIn. Upload files you already have permission to use.
 
 ## API overview
 

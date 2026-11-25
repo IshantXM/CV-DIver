@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.*;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,9 +52,11 @@ public class ResumeController {
       String safe=UUID.randomUUID()+"-"+Path.of(original).getFileName(); Path target=storage.resolve(safe).normalize();
       if(!target.startsWith(storage)) continue;
       file.transferTo(target);
+      String digest=sha256(target);
+      if(repository.findBySha256Hash(digest).isPresent()) { Files.deleteIfExists(target); continue; }
       Resume r=new Resume(); r.setOriginalName(original); r.setName(stripExtension(original));
       r.setContentType(file.getContentType()); r.setFilePath(target.toString()); r.setSizeBytes(file.getSize());
-      r.setSource(lower.endsWith(".pdf")?"PDF":"Screenshot");
+      r.setSource(lower.endsWith(".pdf")?"PDF":"Screenshot"); r.setSha256Hash(digest);
       r.setExtractedText(extract(target, lower));
       repository.save(r); added.add(view(r));
     }
@@ -74,6 +77,8 @@ public class ResumeController {
   @PatchMapping("/{id}") public ResponseEntity<?> update(@PathVariable String id,@RequestBody Map<String,String> updates) {
     return repository.findById(id).<ResponseEntity<?>>map(r->{
       if(updates.containsKey("stage")) r.setStage(updates.get("stage"));
+      if(updates.containsKey("verdict")) r.setVerdict(updates.get("verdict"));
+      if(updates.containsKey("notes")) r.setNotes(updates.get("notes"));
       if(updates.containsKey("tags")) r.setTags(updates.get("tags"));
       repository.save(r); return ResponseEntity.ok(view(r));
     }).orElseGet(()->ResponseEntity.notFound().build());
@@ -92,6 +97,11 @@ public class ResumeController {
     return ResponseEntity.ok(ids.stream().map(repository::findById).flatMap(Optional::stream).map(this::detail).toList());
   }
   private Map<String,Object> detail(Resume r){Map<String,Object> m=view(r);m.put("extractedText",r.getExtractedText());m.put("fileUrl","/api/resumes/"+r.getId()+"/file");return m;}
-  private Map<String,Object> view(Resume r){Map<String,Object> m=new LinkedHashMap<>();m.put("id",r.getId());m.put("name",r.getName());m.put("originalName",r.getOriginalName());m.put("contentType",r.getContentType());m.put("sizeBytes",r.getSizeBytes());m.put("source",r.getSource());m.put("tags",Objects.toString(r.getTags(),""));m.put("stage",r.getStage());m.put("uploadedAt",r.getUploadedAt());m.put("hasText",r.getExtractedText()!=null&&!r.getExtractedText().isBlank());return m;}
+  private Map<String,Object> view(Resume r){Map<String,Object> m=new LinkedHashMap<>();m.put("id",r.getId());m.put("name",r.getName());m.put("originalName",r.getOriginalName());m.put("contentType",r.getContentType());m.put("sizeBytes",r.getSizeBytes());m.put("source",r.getSource());m.put("tags",Objects.toString(r.getTags(),""));m.put("stage",r.getStage());m.put("verdict",Objects.toString(r.getVerdict(),""));m.put("notes",Objects.toString(r.getNotes(),""));m.put("uploadedAt",r.getUploadedAt());m.put("hasText",r.getExtractedText()!=null&&!r.getExtractedText().isBlank());return m;}
   private String stripExtension(String s){int i=s.lastIndexOf('.');return i>0?s.substring(0,i):s;}
+  private String sha256(Path file) throws Exception {
+    MessageDigest digest=MessageDigest.getInstance("SHA-256");
+    try(var in=Files.newInputStream(file)){byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))>0)digest.update(buffer,0,n);}
+    return HexFormat.of().formatHex(digest.digest());
+  }
 }

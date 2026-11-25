@@ -12,8 +12,11 @@ public class Resume {
   private String filePath;
   private long sizeBytes;
   private String source;
+  @Column(unique=true, length=64) private String sha256Hash;
   private String tags;
   private String stage = "Unreviewed";
+  private String verdict = "";
+  @Column(length=2000) private String notes = "";
   private Instant uploadedAt = Instant.now();
   @Column(columnDefinition="CLOB") private String extractedText;
 
@@ -23,7 +26,10 @@ public class Resume {
   public String getFilePath(){return filePath;} public void setFilePath(String v){filePath=v;}
   public long getSizeBytes(){return sizeBytes;} public void setSizeBytes(long v){sizeBytes=v;}
   public String getSource(){return source;} public void setSource(String v){source=v;}
+  public String getSha256Hash(){return sha256Hash;} public void setSha256Hash(String v){sha256Hash=v;}
   public String getTags(){return tags;} public void setTags(String v){tags=v;}
   public String getStage(){return stage;} public void setStage(String v){stage=v;}
+  public String getVerdict(){return verdict;} public void setVerdict(String v){verdict=v;}
+  public String getNotes(){return notes;} public void setNotes(String v){notes=v;}
   public Instant getUploadedAt(){return uploadedAt;} public String getExtractedText(){return extractedText;} public void setExtractedText(String v){extractedText=v;}
 }
