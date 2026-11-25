@@ -198,7 +198,7 @@ Copy `.env.example` to `.env`. Spring Boot loads that file for this project; she
 | `MAX_DOCUMENTS` | `70` | No | Overall library limit. The application also enforces up to 50 PDFs and 20 screenshots. |
 | `AI_ENABLED` | `false` | No | Set to `true` to enable Spring AI/Gemini endpoints and Gemini vision extraction. |
 | `GEMINI_API_KEY` | empty | Only if AI enabled | Private Google Gemini API key. Do not commit `.env` or paste the key into public issues. |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | No | Gemini model name used for chat and vision requests. |
+| `GEMINI_MODEL` | `gemini-3.6-flash` | No | Gemini model name used for chat and vision requests. |
 
 Minimal local configuration:
 
@@ -209,7 +209,7 @@ UPLOAD_DIR=./data/uploads
 MAX_DOCUMENTS=70
 AI_ENABLED=false
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
 To enable Gemini, set `AI_ENABLED=true`, provide your key in `GEMINI_API_KEY`, save `.env`, and restart the application. No API key is required for the core library. Local Tesseract OCR is separate and does not require a Gemini key.

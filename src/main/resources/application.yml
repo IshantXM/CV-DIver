@@ -15,4 +15,4 @@ app:
   max-documents: ${MAX_DOCUMENTS:70}
   ai-enabled: ${AI_ENABLED:false}
   gemini-api-key: ${GEMINI_API_KEY:}
-  gemini-model: ${GEMINI_MODEL:gemini-2.5-flash}
+  gemini-model: ${GEMINI_MODEL:gemini-3.6-flash}

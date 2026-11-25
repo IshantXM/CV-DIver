@@ -5,7 +5,7 @@ const list = $('#resume-list');
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const bytes = n => n < 1024*1024 ? `${Math.max(1,Math.round(n/1024))} KB` : `${(n/1024/1024).toFixed(1)} MB`;
 const toast = (message, error=false) => { const el=document.createElement('div');el.className=`toast${error?' error':''}`;el.role='status';el.textContent=message;$('#toast-region').append(el);setTimeout(()=>el.remove(),4200); };
-async function request(url, options={}) { const r=await fetch(url,options); if(!r.ok){let data={};try{data=await r.json()}catch{}throw Error(data.error||`Request failed (${r.status})`)} return r.status===204?null:r.json(); }
+async function request(url, options={}) { const r=await fetch(url,options); if(!r.ok){let data={};try{data=await r.json()}catch{}throw Error(data.error||data.detail||data.message||`Request failed (${r.status})`)} return r.status===204?null:r.json(); }
 async function load(){try{state.resumes=await request('/api/resumes');render();}catch(e){state.resumes=[];render();toast('The resume service is not reachable yet. Start the Spring Boot app to use your library.',true)}}
 function visible(){return state.resumes.filter(r=>{
  const hay=`${r.name} ${r.originalName} ${r.tags||''}`.toLowerCase();
