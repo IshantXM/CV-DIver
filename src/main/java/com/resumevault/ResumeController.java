@@ -1,6 +1,5 @@
 package com.resumevault;
 
-import net.sourceforge.tess4j.Tesseract;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.*;
 import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,16 +22,14 @@ public class ResumeController {
   private final ResumeRepository repository;
   private final Path storage;
   private final int maxDocuments;
-  private final String tessdataPath;
   private final ChatClient vision;
 
   public ResumeController(ResumeRepository repository,
       @Value("${app.storage-dir}") String storageDir,
       @Value("${app.max-documents:70}") int maxDocuments,
-      @Value("${app.tesseract-path:}") String tessdataPath,
       ObjectProvider<ChatClient> visionProvider) throws Exception {
     this.repository=repository; this.storage=Paths.get(storageDir).toAbsolutePath().normalize();
-    this.maxDocuments=maxDocuments; this.tessdataPath=tessdataPath;
+    this.maxDocuments=maxDocuments;
     this.vision=visionProvider.getIfAvailable();
     Files.createDirectories(this.storage);
   }
@@ -79,9 +78,25 @@ public class ResumeController {
           if(text!=null&&!text.isBlank()) return text;
         } catch(Exception ignored) { /* Fall back to local OCR when Gemini is unavailable. */ }
       }
-      Tesseract ocr=new Tesseract(); if(!tessdataPath.isBlank()) ocr.setDatapath(tessdataPath);
-      return ocr.doOCR(file.toFile());
+      return ocrWithTesseract(file);
     } catch(Exception e) { return ""; }
+  }
+
+  private String ocrWithTesseract(Path file) throws Exception {
+    Path temporaryDirectory=Files.createTempDirectory("cvdiver-ocr-");
+    try {
+      Path outputBase=temporaryDirectory.resolve("recognized");
+      Process process=new ProcessBuilder("tesseract",file.toString(),outputBase.toString(),"-l","eng","--psm","3")
+        .redirectError(ProcessBuilder.Redirect.DISCARD).start();
+      if(!process.waitFor(90,TimeUnit.SECONDS)) { process.destroyForcibly(); return ""; }
+      if(process.exitValue()!=0) return "";
+      Path textFile=temporaryDirectory.resolve("recognized.txt");
+      return Files.exists(textFile)?Files.readString(textFile,StandardCharsets.UTF_8):"";
+    } finally {
+      try(var paths=Files.walk(temporaryDirectory)) {
+        paths.sorted(Comparator.reverseOrder()).forEach(path->{try{Files.deleteIfExists(path);}catch(Exception ignored){}});
+      }
+    }
   }
 
   @GetMapping("/{id}") public ResponseEntity<?> get(@PathVariable String id) {

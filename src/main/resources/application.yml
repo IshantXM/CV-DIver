@@ -16,4 +16,3 @@ app:
   ai-enabled: ${AI_ENABLED:false}
   gemini-api-key: ${GEMINI_API_KEY:}
   gemini-model: ${GEMINI_MODEL:gemini-2.5-flash}
-  tesseract-path: ${TESSERACT_PATH:}
